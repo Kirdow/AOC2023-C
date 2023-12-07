@@ -20,18 +20,7 @@ typedef struct {
 
 int main(int argc, char** argv)
 {
-    if (argc != 2)
-    {
-        printf("Usage: run <filename.txt>\n");
-        return 1;
-    }
-
-    FILE* file = fopen(argv[1], "r");
-    if (!file)
-    {
-        printf("Failed to open file\n");
-        return 1;
-    }
+    FILE* file = getfile(argc, argv);
 
     racelist_t races = {NULL, 0};
 

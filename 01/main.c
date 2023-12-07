@@ -2,6 +2,8 @@
 #include <stdint.h>
 #include <string.h>
 
+#include "../shared/util.h"
+
 #define BUFFER_SIZE 1024
 
 typedef struct {
@@ -66,13 +68,8 @@ int32_t get_number(const char* line)
 
 int main(int argc, char** argv)
 {
-    if (argc < 2)
-    {
-        printf("Usage: run <file.txt>\n");
-        return 1;
-    }
+    FILE* file = getfile(argc, argv);
 
-    FILE *file = NULL;
     char line[BUFFER_SIZE];
 
     file = fopen(argv[1], "r");

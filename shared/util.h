@@ -7,6 +7,26 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <stdio.h>
+
+static FILE* getfile(int argc, char** argv)
+{
+    if (argc != 2)
+    {
+        printf("Usage: run <filename.txt>\n");
+        exit(1);
+    }
+
+    FILE* file = fopen(argv[1], "r");
+    if (!file)
+    {
+        printf("Failed to open file\n");
+        exit(1);
+    }
+
+    return file;
+}
+
 static bool is_str_empty(const char* str)
 {
     const char* ptr = str;
