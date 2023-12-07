@@ -78,7 +78,7 @@ static void add_hand_card(hand_t* hand, char c)
     else if (c == 'T')
         id = 10;
     else if (c == 'J')
-        id = 11;
+        id = 0;
     else if (c == 'Q')
         id = 12;
     else if (c == 'K')
@@ -102,31 +102,80 @@ static hand_t parse_hand(const char* line)
     return hand;
 }
 
+static void print_hand(const hand_t* hand)
+{
+    char buffer[hand->count + 1];
+    for (size_t i = 0; i < hand->count; i++)
+    {
+        char c = hand->data[i];
+        if (c >= 2 && c <= 9) c += 48;
+        else if (c < 2) c = 'J';
+        else if (c == 10) c = 'T';
+        else if (c == 12) c = 'Q';
+        else if (c == 13) c = 'K';
+        else if (c == 14) c = 'A';
+        buffer[i] = c;
+    }
+    buffer[hand->count] = '\0';
+    printf("%s %zu\n", buffer, hand->bet);
+}
+
+static void sort_counts(const char* matches, char* count, char matchcount)
+{
+    memcpy(count, matches, sizeof(char) * 5);
+
+    bool changed = true;
+    while (changed)
+    {
+        changed = false;
+
+        for (size_t i = 1; i < matchcount; i++)
+        {
+            if (count[i-1] < count[i])
+            {
+                char tmp = count[i - 1];
+                count[i - 1] = count[i];
+                count[i] = tmp;
+
+                changed = true;
+            }
+        }
+
+    }
+}
+
 static uint64_t get_hand_id(const hand_t* hand)
 {
     char pools[15];
     memset(pools, 0, sizeof(pools));
+    print_hand(hand);
 
     for (uint64_t index = 0; index < hand->count; index++)
         pools[hand->data[index]]++;
 
     char matches[5];
+    char matchcount = 0;
+
     memset(matches, 0, sizeof(matches));
 
-    for (uint64_t index = 0; index < 15; index++)
+    char joker = pools[0];
+    for (uint64_t index = 2; index < 15; index++)
     {
         uint64_t value = pools[index];
-        if (value != 0) matches[value - 1]++;
+        if (value != 0) matches[matchcount++] = value;
     }
 
-    if (matches[0] == 5) return 1;
-    else if (matches[1] == 1 && matches[2] == 0) return 2;
-    else if (matches[1] == 2) return 3;
-    else if (matches[2] == 1 && matches[1] == 0) return 4;
-    else if (matches[2] == 1 && matches[1] == 1) return 5;
-    else if (matches[3] == 1) return 6;
-    else if (matches[4] == 1) return 7;
-    return 0;
+    char counts[matchcount];
+    sort_counts(matches, counts, matchcount);
+    char count = counts[0] + joker;
+
+    if (count == 5) return 7;
+    else if (count == 4) return 6;
+    else if (count == 3 && counts[1] == 2) return 5;
+    else if (count == 3) return 4;
+    else if (count == 2 && counts[1] == 2) return 3;
+    else if (count == 2) return 2;
+    else return 1;
 }
 
 static int compare(const hand_t* left, const hand_t* right)
@@ -216,9 +265,11 @@ int main(int argc, char** argv)
     for (uint64_t i = 0; i < table.count; ++i)
     {
         wintype_t* wintype = &table.data[i];
+        printf("Win type: %zu\n", wintype->win_id);
         for (uint64_t j = 0; j < wintype->count; ++j, ++winning_index)
         {
             hand_t* hand = &wintype->data[j];
+            print_hand(hand);
             total_winnings += winning_index * hand->bet;
         }
     }
